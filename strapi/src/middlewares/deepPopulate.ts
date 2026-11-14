@@ -91,6 +91,11 @@ const getDeepPopulate = (uid: UID.Schema, opts: Options = {}) => {
   );
 };
 
+const isLocalized = (uid: string) => {
+  const model: any = strapi.getModel(uid as any);
+  return Boolean(model?.pluginOptions?.i18n?.localized);
+};
+
 export default (config, { strapi }: { strapi: Core.Strapi }) => {
   return async (ctx, next) => {
     if (
@@ -109,9 +114,10 @@ export default (config, { strapi }: { strapi: Core.Strapi }) => {
       ctx.query.populate = {
         // @ts-ignores
         ...getDeepPopulate(uid),
-        ...(!ctx.request.url.includes('products') && {
-          localizations: { populate: {} },
-        }),
+        ...(!ctx.request.url.includes('products') &&
+          isLocalized(uid) && {
+            localizations: { populate: {} },
+          }),
       };
     }
     await next();

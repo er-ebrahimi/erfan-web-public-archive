@@ -15,7 +15,7 @@ export const FAQ = ({
 }) => {
   return (
     <Container className="flex flex-col items-center justify-between pb-20">
-      <div className="relative z-20 py-10 md:pt-40">
+      <div className="relative z-20 pt-24 pb-10 md:pt-40">
         <FeatureIconContainer className="flex justify-center items-center overflow-hidden">
           <IconHelpHexagonFilled className="h-6 w-6 text-primary-foreground" />
         </FeatureIconContainer>

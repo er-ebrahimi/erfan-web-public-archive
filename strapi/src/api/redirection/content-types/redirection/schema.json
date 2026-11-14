@@ -4,7 +4,8 @@
   "info": {
     "singularName": "redirection",
     "pluralName": "redirections",
-    "displayName": "Redirection"
+    "displayName": "Redirects",
+    "description": "Manual 301 redirects. Use paths only, for example /bathroomdesign -> /bathroom-design. Publish a row to activate it; the site picks up changes within about 30 seconds."
   },
   "options": {
     "draftAndPublish": true

@@ -722,6 +722,18 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
           localized: true;
         };
       }>;
+    siteDescription: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    siteName: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1063,7 +1075,8 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
 export interface ApiRedirectionRedirection extends Struct.CollectionTypeSchema {
   collectionName: 'redirections';
   info: {
-    displayName: 'Redirection';
+    description: 'Manual 301 redirects. Use paths only, for example /bathroomdesign -> /bathroom-design. Publish a row to activate it; the site picks up changes within about 30 seconds.';
+    displayName: 'Redirects';
     pluralName: 'redirections';
     singularName: 'redirection';
   };

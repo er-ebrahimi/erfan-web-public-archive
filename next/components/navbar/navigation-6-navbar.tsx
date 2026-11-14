@@ -90,7 +90,7 @@ export function NavigationNavbar({ data, locale, languages = [] }: Props) {
   return (
     <nav
       aria-label={company}
-      className="fixed inset-x-2 top-4 z-50 mx-auto flex max-w-fit items-center justify-center gap-1.5 rounded-full border border-border/80 bg-popover/85 px-2.5 py-1.5 shadow-derek backdrop-blur-md sm:inset-x-0"
+      className="fixed inset-x-2 top-4 z-50 mx-auto flex max-w-fit items-center justify-center gap-1.5 rounded-full border border-border/80 bg-popover px-2.5 py-1.5 shadow-derek sm:inset-x-0"
     >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
@@ -179,7 +179,7 @@ export function NavigationNavbar({ data, locale, languages = [] }: Props) {
         <PopoverContent
           align="center"
           sideOffset={14}
-          className="max-h-[82dvh] w-[calc(100vw-1.5rem)] max-w-6xl overflow-y-auto overscroll-contain rounded-3xl border border-border/80 bg-popover p-0 text-popover-foreground shadow-lg outline-none"
+          className="thin-scrollbar max-h-[82dvh] w-[calc(100vw-1.5rem)] max-w-6xl overflow-y-auto overscroll-contain rounded-3xl border border-border/80 bg-popover p-0 text-popover-foreground shadow-lg outline-none"
         >
           <nav aria-label={t('menu')} className="p-6 lg:p-8">
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -242,6 +242,9 @@ export function NavigationNavbar({ data, locale, languages = [] }: Props) {
   );
 }
 
+/** Labels ending in a bare "<" / ">" are mirrored to ">" and pushed to the left by RTL bidi; a LTR base keeps the authored marker on the right. */
+const hasTrailingMarker = (text: string) => /[<>]\s*$/.test(text);
+
 function MenuLink({
   item,
   locale,
@@ -254,8 +257,11 @@ function MenuLink({
   className?: string;
 }) {
   if (!item.text) return null;
+  const markerClass = hasTrailingMarker(item.text)
+    ? 'nav-label-marker'
+    : undefined;
   if (!item.URL) {
-    return <span className={className}>{item.text}</span>;
+    return <span className={cn(className, markerClass)}>{item.text}</span>;
   }
   return (
     <Link
@@ -265,7 +271,8 @@ function MenuLink({
       onClick={onNavigate}
       className={cn(
         'block rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        className
+        className,
+        markerClass
       )}
     >
       {item.text}

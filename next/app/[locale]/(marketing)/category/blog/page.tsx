@@ -71,7 +71,7 @@ export default async function Blog(props: {
     articles = await fetchContentType(
       'articles',
       {
-        filters: { locale: params.locale, slug: { $contains: 'blog' } },
+        filters: { locale: params.locale },
         pagination: { pageSize: 100 },
         populate: ['image', 'categories'],
       },
@@ -102,7 +102,7 @@ export default async function Blog(props: {
       <ClientSlugHandler localizedSlugs={localizedSlugs} />
       <AmbientColor />
       <Container className="flex flex-col items-center justify-between pb-20">
-        <div className="relative z-20 py-10 md:pt-40">
+        <div className="relative z-20 pt-24 pb-10 md:pt-40">
           <FeatureIconContainer className="flex justify-center items-center overflow-hidden">
             <IconClipboardText className="h-6 w-6 text-primary-foreground" />
           </FeatureIconContainer>

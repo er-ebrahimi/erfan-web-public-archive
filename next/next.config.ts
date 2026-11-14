@@ -227,58 +227,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async redirects() {
-    // Static 301s for legacy nested category URLs. These are always present so
-    // they survive a Strapi outage during build.
-    const staticRedirects = legacyCategoryRedirects.flatMap(
-      ([source, destination]) => [
-        { source, destination, statusCode: 301 },
-        { source: `${source}/`, destination, statusCode: 301 },
-      ]
-    );
-
-    // `statusCode: 301` for the new static redirects, `permanent: true`
-    // (served as 308) for the Strapi-managed ones.
-    let redirections: (
-      | { source: string; destination: string; statusCode: number }
-      | { source: string; destination: string; permanent: boolean }
-    )[] = [...staticRedirects];
-    try {
-      const rawApiUrl =
-        process.env.STRAPI_INTERNAL_URL || env.NEXT_PUBLIC_API_URL;
-      if (!rawApiUrl) {
-        return redirections;
-      }
-
-      const apiUrl = rawApiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${apiUrl}/api/redirections?populate=*`);
-      if (!res.ok) {
-        return redirections;
-      }
-
-      const result = await res.json();
-      if (!result?.data) {
-        return redirections;
-      }
-
-      const redirectItems = result.data.map(
-        ({ source, destination }: { source: string; destination: string }) => ({
-          source: `/:locale${source}`,
-          destination: `/:locale${destination}`,
-          permanent: true,
-        })
-      );
-
-      redirections = redirections.concat(redirectItems);
-
-      return redirections;
-    } catch (error) {
-      console.error(
-        'Failed to fetch redirects from Strapi:',
-        error instanceof Error ? error.message : error
-      );
-      return redirections;
-    }
+  redirects() {
+    // Static 301s for legacy nested category URLs. They are always present so
+    // they survive a Strapi outage. Strapi-managed redirects are resolved at
+    // request time in `proxy.ts`, so publishing one needs no rebuild.
+    return legacyCategoryRedirects.flatMap(([source, destination]) => [
+      { source, destination, statusCode: 301 },
+      { source: `${source}/`, destination, statusCode: 301 },
+    ]);
   },
 };
 

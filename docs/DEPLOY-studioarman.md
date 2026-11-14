@@ -81,7 +81,7 @@ The image build is still the Dockerfile's `npm install --legacy-peer-deps` again
 
 `NEXT_PUBLIC_*` values are inlined into the client bundle at `next build`. Changing them requires a new image.
 
-`next/next.config.mjs` fetches redirects at build time from `${NEXT_PUBLIC_API_URL}/api/redirections`. A failed fetch is ignored and the build continues with no CMS redirects. A wrong `NEXT_PUBLIC_API_URL` is baked in.
+Strapi-managed redirects are read at request time by `next/proxy.ts` from `${STRAPI_INTERNAL_URL}/api/redirections` (fallback `NEXT_PUBLIC_API_URL`), cached for 30 seconds. Publishing a row in Strapi does **not** require a rebuild. If Strapi is unreachable, the last good list stays in use. Only the hardcoded legacy category redirects remain in `next/next.config.ts`. See `docs/REDIRECTS.md`.
 
 `next/.env.local` is used **only during the build**. Next's standalone output copies `.env` and `.env.production`, but **not `.env.local`** (see `writeStandaloneDirectory` in Next). Server-only values read at runtime (`FRONT_URL`, `STRAPI_INTERNAL_URL`, contact secrets) must be passed by the container, e.g. the `environment:` block in `next/deploy/docker-compose.prod.yml`. A missing `FRONT_URL` fails the build (Zod) and the container start (`next/instrumentation.ts`).
 
@@ -96,7 +96,7 @@ Variables read by the Next app (from code, `next/.env.example`, and `next/.env.p
 | Variable                         | When it matters                                 | Used for                                                                                                                                |
 | -------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `FRONT_URL`                      | Build **and server runtime**                    | Canonical site URL: `sitemap.xml`, `robots.txt`, `llms.txt`, JSON-LD, 404 markdown. Required: build and container start fail without it |
-| `NEXT_PUBLIC_API_URL`            | Build (inlined) and server runtime              | Strapi origin, auth calls, image URLs, redirect fetch `${NEXT_PUBLIC_API_URL}/api/redirections`                                         |
+| `NEXT_PUBLIC_API_URL`            | Build (inlined) and server runtime              | Strapi origin, auth calls, image URLs; fallback for the runtime redirect fetch when `STRAPI_INTERNAL_URL` is unset                      |
 | `NEXT_PUBLIC_SITE_URL`           | —                                               | Not used by the current app. The sitemap uses `FRONT_URL`                                                                               |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Build (inlined into the contact form)           | Cloudflare Turnstile site key                                                                                                           |
 | `DOMAIN`                         | Build (`next.config.ts` image `remotePatterns`) | Strapi upload hostname                                                                                                                  |
@@ -227,7 +227,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L --max-redirs 5 htt
 ## Risks
 
 - `STUDIOARMAN_ENV_LOCAL` is used in the builder stage only. The final image copies the standalone output, which excludes `.env.local`, so the published image does not contain the secret. Keep the package private and rotate credentials if the package is exposed.
-- Changing `NEXT_PUBLIC_*` or redirects requires a rebuild. Restarting the container is not enough for client-side values.
+- Changing `NEXT_PUBLIC_*` requires a rebuild. Restarting the container is not enough for client-side values. Strapi redirects are the exception: they are read at runtime, so publishing a row needs no deploy (see `docs/REDIRECTS.md`).
 - The first successful health check is followed by `docker image prune -f`. Dangling images go away. Tagged `studioarman-<sha>` images stay. If the pre-pipeline container's image had no remaining tag, prune can remove it after a successful deploy, and automatic rollback is then impossible.
 - Rollback starts the previous image id with `FRONT_URL` set, matching the compose file. It does not restore extra mounts, networks, or a host env file from the old compose project.
 - If the first deploy has no previous container and the health check fails, the script does not start a replacement. The site stays down and the job fails.

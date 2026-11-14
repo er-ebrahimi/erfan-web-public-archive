@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 
 import { routing } from './i18n/routing';
 import { notFoundMarkdown } from '@/lib/not-found-markdown';
+import { findRedirect, loadRedirectMap, normalizePath } from '@/lib/redirects';
+import { SITE_URL } from '@/lib/shared/site-url';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -18,8 +20,29 @@ function markdownNotFoundResponse(): NextResponse {
   });
 }
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const redirects = await loadRedirectMap(routing.locales);
+    const match = findRedirect(pathname, routing.locales, redirects);
+
+    if (match) {
+      const locale = match.locale ?? routing.defaultLocale;
+      const target = `/${locale}${
+        match.destination === '/' ? '' : match.destination
+      }`;
+
+      // A canonicalization entry (/faq -> /fa/faq) must not loop on the
+      // already-prefixed URL.
+      if (target !== normalizePath(pathname)) {
+        const url = new URL(target, SITE_URL);
+        url.search = request.nextUrl.search;
+
+        return NextResponse.redirect(url, 301);
+      }
+    }
+  }
 
   if (pathname === '/') {
     request.nextUrl.pathname = `/${routing.defaultLocale}`;

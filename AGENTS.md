@@ -153,7 +153,7 @@ The old manual `docker save` / `docker load` flow is not used.
 
 - **Auth**: Next.js API routes (`next/app/api/auth/*`) proxy to Strapi's `users-permissions` plugin (JWT, 7d expiry).
 - **Strapi custom middleware**: `deepPopulate` at `strapi/src/middlewares/deepPopulate.ts`.
-- **SEO**: Dynamic redirects fetched from Strapi at build time in `next.config.mjs`. Metadata from Strapi `global` content type via `next/lib/shared/metadata.ts`.
+- **SEO**: Strapi-managed 301 redirects are resolved at request time in `next/proxy.ts` via `next/lib/redirects.ts` (30s cache); publishing a Strapi row needs no rebuild. Static legacy redirects stay in `next.config.ts`. See `docs/REDIRECTS.md`. Metadata from Strapi `global` content type via `next/lib/shared/metadata.ts`.
 - **Site identity**: Strapi `Global → siteName` / `siteDescription` feeds Organization/WebSite JSON-LD and `llms.txt`. The `NEXT_PUBLIC_SITE_*` env values are fallbacks; `NEXT_PUBLIC_SITE_NAME` also feeds the edge 404 markdown.
 - **shadcn/ui** setup in `next/components.json`, aliases: `@/components`, `@/components/ui`, `@/lib/utils`.
 - **Path alias**: `@/*` maps to `next/` directory root (see `next/tsconfig.json`).
